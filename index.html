@@ -36,9 +36,9 @@ function canvasApp(){
     }
   }
   var context=myCanvas.getContext("2d");
-  myCanvas.addEventListener("touchstart", eventMouseDown, false);
-  myCanvas.addEventListener("touchend", eventMouseUp, false);
-  myCanvas.addEventListener("touchmove", eventMouseMove, false);
+  myCanvas.addEventListener("pointerdown", eventMouseDown, false);
+  myCanvas.addEventListener("pointerup", eventMouseUp, false);
+  myCanvas.addEventListener("pointermove", eventMouseMove, false);
   var myButton=document.getElementById("myButton");
   myButton.addEventListener("click", eventClicked, false);
   setScreen();
