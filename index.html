@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>2-dimensional cellular automata</title>
+<title>2-d CA</title>
 <script>
 window.addEventListener("load", eventWindowLoaded, false);
 function eventWindowLoaded(){
@@ -36,9 +36,9 @@ function canvasApp(){
     }
   }
   var context=myCanvas.getContext("2d");
-  myCanvas.addEventListener("mousedown", eventMouseDown, false);
-  myCanvas.addEventListener("mouseup", eventMouseUp, false);
-  myCanvas.addEventListener("mousemove", eventMouseMove, false);
+  myCanvas.addEventListener("touchstart", eventMouseDown, false);
+  myCanvas.addEventListener("touchend", eventMouseUp, false);
+  myCanvas.addEventListener("touchmove", eventMouseMove, false);
   var myButton=document.getElementById("myButton");
   myButton.addEventListener("click", eventClicked, false);
   setScreen();
@@ -133,12 +133,24 @@ function canvasApp(){
 </head>
 <body>
 <div align="center">
-<h1>Life Game</h1>
+<h1>2-dimensional cellular automata</h1>
 <br>
-<canvas id="myCanvas" width="1000" height="400"></canvas>
+<canvas id="myCanvas" width="1000" height="600"></canvas>
 <div id="point">
 </div>
 <input type="button" id="myButton" value="start">
+<label for="neighborhood">5 or 9 neighborhood: </label>
+<select id="neighborhood">
+<option value="5">5-neighborhood</option>
+<option value="9" selected>9-neighborhood</option>
+</select>
+<label for="totalistic">outer totalistic or not: </label>
+<select id="totalistic">
+<option value="totalistic">totalistic</option>
+<option value="outer totalistic" selected>outer totalistic</option>
+</select>
+<label for="code">code: </label>
+<input type="text" id="code" value="224">
 </div>
 </body>
 </html>
