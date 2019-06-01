@@ -17,6 +17,13 @@ function canvasApp() {
   var myCanvas = document.getElementById("myCanvas");
   var rows = myCanvas.height / size;
   var columns = myCanvas.width / size;
+  var neighborhoodType = document.getElementById("neighborhood");
+  var totalisticType = document.getElementById("totalistic");
+  var code = document.getElementById("code");
+  var pattern;
+  var countFunc;
+  var updateFunc;
+
   //判定用配列input
   var input = new Array(columns);
   for (var i=0; i<columns; i++) {
@@ -27,6 +34,7 @@ function canvasApp() {
       input[j][k] = 0;
     }
   }
+
   //表示用配列output
   var output = new Array(columns);
   for (var l=0; l<columns; l++) {
@@ -37,6 +45,7 @@ function canvasApp() {
       output[m][n] = 0;
     }
   }
+
   var context = myCanvas.getContext("2d");
   myCanvas.addEventListener("pointerdown", eventMouseDown, false);
   myCanvas.addEventListener("pointerup", eventMouseUp, false);
@@ -44,6 +53,7 @@ function canvasApp() {
   var myButton = document.getElementById("myButton");
   myButton.addEventListener("click", eventClicked, false);
   setScreen();
+
   function setScreen() {
     context.fillStyle="#ffffff";
     context.fillRect(0, 0, myCanvas.width, myCanvas.height);
@@ -62,12 +72,15 @@ function canvasApp() {
       context.stroke();
     }
   }
+
   function eventMouseDown() {
     mouseFlag = true;
   }
+
   function eventMouseUp() {
     mouseFlag = false;
   }
+
   function eventMouseMove(e) {
     if (mouseFlag && myButton.value == "start") {
       var rect = myCanvas.getBoundingClientRect();
@@ -83,17 +96,122 @@ function canvasApp() {
       textField.innerHTML = "("+pointX+", "+pointY+")";
     }
   }
+
   function eventClicked() {
     if (myButton.value == "start") {
       myButton.value = "stop";
       game = true;
-      // judge code
-      timer = setInterval(startGame, 100);
+      if (totalisticType.value == "totalistic") {
+        pattern = getLivePatternForTotalistic(code.value);
+        updateFunc = updateForTotalistic;
+        if (neighborhoodType.value == "5") {
+          countFunc = getNumberForTotalistic5;
+        } else {
+          countFunc = getNumberForTotalistic9;
+        }
+      } else {
+        pattern = getLivePatternForOuterTotalistic(code.value);
+        console.log(pattern);
+        updateFunc = updateForOuterTotalistic;
+        if (neighborhoodType.value == "5") {
+          countFunc = getNumberForOuterTotalistic5;
+        } else {
+          countFunc = getNumberForOuterTotalistic9;
+        }
+      }
+      timer = setInterval(updateFunc, 100);
     } else if (myButton.value == "stop") {
       myButton.value = "start";
       game = false;
     }
   }
+
+  function getLivePatternForTotalistic(code) {
+    var base2 = parseInt(code, 10).toString(2);
+    var pattern = [];
+    for (var i=0; i<base2.length; i++) {
+      if (base2[i] == '1') {
+        pattern.push(i);
+      }
+    }
+    return pattern;
+  }
+
+  function getLivePatternForOuterTotalistic(code) {
+    var base2 = parseInt(code, 10).toString(2);
+    var pattern = [];
+    for (var i=0; i<base2.length; i++) {
+      if (base2[i] == '1') {
+        console.log(base2.length - i - 1);
+        var a = (base2.length - i - 1) % 2;
+        var n = Math.floor((base2.length - i - 1) / 2);
+        pattern.push([a, n]);
+      }
+    }
+    return pattern;
+  }
+
+  function getNumberForOuterTotalistic9(i, j) {
+    //var columnsMinus1 = columns - 1;
+    //var rowsMinus1 = rows - 1;
+    //var iPlus1 = i;
+    //var iMinus1 = i;
+    //var jPlus1 = j;
+    //var jMinus1 = j;
+    //return input[iMinus1][jMinus1] + input[iMinus1][j] +input[iMinus1][jPlus1]
+    //     + input[i][jMinus1] + input[i][jPlus1]
+    //     + input[iPlus1][jMinus1] + input[iPlus1][j] + input[iPlus1][jPlus1];
+    var life;
+        if ((i==0&&j==0)||(i==columns-1&&j==0)||(i==columns-1&&j==rows-1)||(i==0&&j==rows-1)) {
+          life=input[1][0]+input[1][1]+input[0][1]+input[columns-2][1]+input[columns-2][0]+input[columns-2][rows-2]+input[0][rows-2]+input[1][rows-2];
+        } else if (i==0||i==columns-1) {
+          life=input[0][j-1]+input[1][j-1]+input[1][j]+input[1][j+1]+input[0][j+1]+input[columns-2][j+1]+input[columns-2][j]+input[columns-2][j-1];
+        } else if (j==0||j==rows-1) {
+          life=input[i+1][0]+input[i+1][1]+input[i][1]+input[i-1][1]+input[i-1][0]+input[i-1][rows-2]+input[i][rows-2]+input[i+1][rows-2];
+        } else {
+          life=input[i+1][j-1]+input[i+1][j]+input[i+1][j+1]+input[i][j+1]+input[i-1][j+1]+input[i-1][j]+input[i-1][j-1]+input[i][j-1];
+        }
+        return life;
+  }
+
+  function updateForTotalistic() {
+  }
+
+
+  function updateForOuterTotalistic() {
+    setScreen();
+    for (var i=0; i<columns; i++) {
+      for (var j=0; j<rows; j++) {
+        var count = countFunc(i, j);
+        output[i][j] = 0;
+        for (var k=0; k<pattern.length; k++) {
+          if (input[i][j] == pattern[k][0] && count == pattern[k][1]) {
+            output[i][j] = 1;
+            break;
+          }
+        }
+      }
+    }
+    draw();
+    if (!game) {
+      clearInterval(timer);
+    }
+  }
+
+  function draw() {
+    for (var i=0; i<columns; i++) {
+      for (var j=0; j<rows; j++) {
+        if (output[i][j]==1) {
+          context.fillStyle="#0000ff";
+          context.fillRect(i*size, j*size, size, size);
+          input[i][j]=1;
+        } else if (output[i][j]==0) {
+          input[i][j]=0;
+        }
+      }
+    }
+  }
+
   function startGame() {
     setScreen();
     for (var i=0; i<columns; i++) {
@@ -116,17 +234,7 @@ function canvasApp() {
         }
       }
     }
-    for (var k=0; k<columns; k++) {
-      for (var l=0; l<rows; l++) {
-        if (output[k][l]==1) {
-          context.fillStyle="#0000ff";
-          context.fillRect(k*size, l*size, size, size);
-          input[k][l]=1;
-        } else if (output[k][l]==0) {
-          input[k][l]=0;
-        }
-      }
-    }
+    draw();
     if (!game) {
       clearInterval(timer);
     }
@@ -150,7 +258,7 @@ function canvasApp() {
 <label for="totalistic">outer totalistic or not: </label>
 <select id="totalistic">
 <option value="totalistic">totalistic</option>
-<option value="outer totalistic" selected>outer totalistic</option>
+<option value="outer_totalistic" selected>outer totalistic</option>
 </select>
 <label for="code">code: </label>
 <input type="text" id="code" value="224">
