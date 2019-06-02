@@ -9,11 +9,11 @@ function eventWindowLoaded() {
   canvasApp();
 }
 function canvasApp() {
-  var life;
   var mouseFlag = false;//マウスドラッグ判定フラグ
   var game = false;//ゲーム停止判定フラグ
   var timer;//setIntervalの戻り値用の変数
-  var size = 10;//マスの縦と横のpx
+  var cellSize = document.getElementById("cellSize");
+  var size = parseInt(cellSize.value, 10);//マスの縦と横のpx
   var myCanvas = document.getElementById("myCanvas");
   var rows = myCanvas.height / size;
   var columns = myCanvas.width / size;
@@ -92,8 +92,6 @@ function canvasApp() {
       output[pointX][pointY] = 1;
       context.fillStyle = "#0000ff";
       context.fillRect(pointX*size, pointY*size, size, size);
-      var textField = document.getElementById("point");
-      textField.innerHTML = "("+pointX+", "+pointY+")";
     }
   }
 
@@ -101,22 +99,22 @@ function canvasApp() {
     if (myButton.value == "start") {
       myButton.value = "stop";
       game = true;
+      setCellForSizeValue();
       if (totalisticType.value == "totalistic") {
         pattern = getLivePatternForTotalistic(code.value);
         updateFunc = updateForTotalistic;
         if (neighborhoodType.value == "5") {
-          countFunc = getNumberForTotalistic5;
+          countFunc = getNumberFor5;
         } else {
-          countFunc = getNumberForTotalistic9;
+          countFunc = getNumberFor9;
         }
       } else {
         pattern = getLivePatternForOuterTotalistic(code.value);
-        console.log(pattern);
         updateFunc = updateForOuterTotalistic;
         if (neighborhoodType.value == "5") {
-          countFunc = getNumberForOuterTotalistic5;
+          countFunc = getNumberFor5;
         } else {
-          countFunc = getNumberForOuterTotalistic9;
+          countFunc = getNumberFor9;
         }
       }
       timer = setInterval(updateFunc, 100);
@@ -124,6 +122,48 @@ function canvasApp() {
       myButton.value = "start";
       game = false;
     }
+  }
+
+  function setCellForSizeValue() {
+    var newSize = parseInt(cellSize.value, 10);
+    var newRows = myCanvas.height / newSize;
+    var newColumns = myCanvas.width / newSize;
+
+    //判定用配列input
+    var newInput = new Array(newColumns);
+    for (var i=0; i<newColumns; i++) {
+      newInput[i] = new Array(newRows);
+    }
+    for (var j=0; j<newColumns; j++) {
+      for (var k=0; k<newRows; k++) {
+        if (j < columns && k < rows && input[j][k] == 1) {
+          newInput[j][k] = 1;
+        } else {
+          newInput[j][k] = 0;
+        }
+      }
+    }
+
+    //表示用配列output
+    var newOutput = new Array(newColumns);
+    for (var l=0; l<newColumns; l++) {
+      newOutput[l] = new Array(newRows);
+    }
+    for (var m=0; m<newColumns; m++) {
+      for (var n=0; n<newRows; n++) {
+        if (m < columns && n < rows && output[m][n] == 1) {
+          newOutput[m][n] = 1;
+        } else {
+          newOutput[m][n] = 0;
+        }
+      }
+    }
+
+    size = newSize;
+    rows = newRows;
+    columns = newColumns;
+    input = newInput;
+    output = newOutput;
   }
 
   function getLivePatternForTotalistic(code) {
@@ -142,7 +182,6 @@ function canvasApp() {
     var pattern = [];
     for (var i=0; i<base2.length; i++) {
       if (base2[i] == '1') {
-        console.log(base2.length - i - 1);
         var a = (base2.length - i - 1) % 2;
         var n = Math.floor((base2.length - i - 1) / 2);
         pattern.push([a, n]);
@@ -151,7 +190,7 @@ function canvasApp() {
     return pattern;
   }
 
-  function getNumberForOuterTotalistic5(i, j) {
+  function getNumberFor5(i, j) {
     var iMinus1 = i - 1 < 0 ? i - 1 + columns : i - 1;
     var iPlus1 = i + 1 > columns - 1 ? i + 1 - columns : i + 1;
     var jMinus1 = j - 1 < 0 ? j - 1 + rows : j - 1;
@@ -160,7 +199,7 @@ function canvasApp() {
     return input[iMinus1][j] + input[i][jMinus1] + input[iPlus1][j] + input[i][jPlus1];
   }
 
-  function getNumberForOuterTotalistic9(i, j) {
+  function getNumberFor9(i, j) {
     var iMinus1 = i - 1 < 0 ? i - 1 + columns : i - 1;
     var iPlus1 = i + 1 > columns - 1 ? i + 1 - columns : i + 1;
     var jMinus1 = j - 1 < 0 ? j - 1 + rows : j - 1;
@@ -175,10 +214,10 @@ function canvasApp() {
     setScreen();
     for (var i=0; i<columns; i++) {
       for (var j=0; j<rows; j++) {
-        var count = countFunc(i, j);
+        var count = countFunc(i, j) + input[i][j];
         output[i][j] = 0;
         for (var k=0; k<pattern.length; k++) {
-          if (input[i][j] == pattern[k][0] && count == pattern[k][1]) {
+          if (count == pattern[k]) {
             output[i][j] = 1;
             break;
           }
@@ -233,21 +272,26 @@ function canvasApp() {
 <h1>2-dimensional cellular automata</h1>
 <br>
 <canvas id="myCanvas" width="1000" height="600"></canvas>
-<div id="point">
-</div>
+<br>
 <input type="button" id="myButton" value="start">
+<br>
 <label for="neighborhood">5 or 9 neighborhood: </label>
 <select id="neighborhood">
 <option value="5">5-neighborhood</option>
 <option value="9" selected>9-neighborhood</option>
 </select>
+<br>
 <label for="totalistic">outer totalistic or not: </label>
 <select id="totalistic">
 <option value="totalistic">totalistic</option>
 <option value="outer_totalistic" selected>outer totalistic</option>
 </select>
+<br>
 <label for="code">code: </label>
 <input type="text" id="code" value="224">
+<br>
+<label for="cellSize">cell size(px): </label>
+<input type="text" id="cellSize" value="10">
 </div>
 </body>
 </html>
