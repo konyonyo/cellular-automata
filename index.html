@@ -151,30 +151,44 @@ function canvasApp() {
     return pattern;
   }
 
+  function getNumberForOuterTotalistic5(i, j) {
+    var iMinus1 = i - 1 < 0 ? i - 1 + columns : i - 1;
+    var iPlus1 = i + 1 > columns - 1 ? i + 1 - columns : i + 1;
+    var jMinus1 = j - 1 < 0 ? j - 1 + rows : j - 1;
+    var jPlus1 = j + 1 > rows - 1 ? j + 1 - rows : j + 1;
+
+    return input[iMinus1][j] + input[i][jMinus1] + input[iPlus1][j] + input[i][jPlus1];
+  }
+
   function getNumberForOuterTotalistic9(i, j) {
-    //var columnsMinus1 = columns - 1;
-    //var rowsMinus1 = rows - 1;
-    //var iPlus1 = i;
-    //var iMinus1 = i;
-    //var jPlus1 = j;
-    //var jMinus1 = j;
-    //return input[iMinus1][jMinus1] + input[iMinus1][j] +input[iMinus1][jPlus1]
-    //     + input[i][jMinus1] + input[i][jPlus1]
-    //     + input[iPlus1][jMinus1] + input[iPlus1][j] + input[iPlus1][jPlus1];
-    var life;
-        if ((i==0&&j==0)||(i==columns-1&&j==0)||(i==columns-1&&j==rows-1)||(i==0&&j==rows-1)) {
-          life=input[1][0]+input[1][1]+input[0][1]+input[columns-2][1]+input[columns-2][0]+input[columns-2][rows-2]+input[0][rows-2]+input[1][rows-2];
-        } else if (i==0||i==columns-1) {
-          life=input[0][j-1]+input[1][j-1]+input[1][j]+input[1][j+1]+input[0][j+1]+input[columns-2][j+1]+input[columns-2][j]+input[columns-2][j-1];
-        } else if (j==0||j==rows-1) {
-          life=input[i+1][0]+input[i+1][1]+input[i][1]+input[i-1][1]+input[i-1][0]+input[i-1][rows-2]+input[i][rows-2]+input[i+1][rows-2];
-        } else {
-          life=input[i+1][j-1]+input[i+1][j]+input[i+1][j+1]+input[i][j+1]+input[i-1][j+1]+input[i-1][j]+input[i-1][j-1]+input[i][j-1];
-        }
-        return life;
+    var iMinus1 = i - 1 < 0 ? i - 1 + columns : i - 1;
+    var iPlus1 = i + 1 > columns - 1 ? i + 1 - columns : i + 1;
+    var jMinus1 = j - 1 < 0 ? j - 1 + rows : j - 1;
+    var jPlus1 = j + 1 > rows - 1 ? j + 1 - rows : j + 1;
+
+    return input[iMinus1][jMinus1] + input[iMinus1][j] + input[iMinus1][jPlus1]
+         + input[i][jMinus1] + input[i][jPlus1]
+         + input[iPlus1][jMinus1] + input[iPlus1][j] + input[iPlus1][jPlus1];
   }
 
   function updateForTotalistic() {
+    setScreen();
+    for (var i=0; i<columns; i++) {
+      for (var j=0; j<rows; j++) {
+        var count = countFunc(i, j);
+        output[i][j] = 0;
+        for (var k=0; k<pattern.length; k++) {
+          if (input[i][j] == pattern[k][0] && count == pattern[k][1]) {
+            output[i][j] = 1;
+            break;
+          }
+        }
+      }
+    }
+    draw();
+    if (!game) {
+      clearInterval(timer);
+    }
   }
 
 
@@ -209,34 +223,6 @@ function canvasApp() {
           input[i][j]=0;
         }
       }
-    }
-  }
-
-  function startGame() {
-    setScreen();
-    for (var i=0; i<columns; i++) {
-      for (var j=0; j<rows; j++) {
-        if ((i==0&&j==0)||(i==columns-1&&j==0)||(i==columns-1&&j==rows-1)||(i==0&&j==rows-1)) {
-          life=input[1][0]+input[1][1]+input[0][1]+input[columns-2][1]+input[columns-2][0]+input[columns-2][rows-2]+input[0][rows-2]+input[1][rows-2];
-        } else if (i==0||i==columns-1) {
-          life=input[0][j-1]+input[1][j-1]+input[1][j]+input[1][j+1]+input[0][j+1]+input[columns-2][j+1]+input[columns-2][j]+input[columns-2][j-1];
-        } else if (j==0||j==rows-1) {
-          life=input[i+1][0]+input[i+1][1]+input[i][1]+input[i-1][1]+input[i-1][0]+input[i-1][rows-2]+input[i][rows-2]+input[i+1][rows-2];
-        } else {
-          life=input[i+1][j-1]+input[i+1][j]+input[i+1][j+1]+input[i][j+1]+input[i-1][j+1]+input[i-1][j]+input[i-1][j-1]+input[i][j-1];
-        }
-        if (input[i][j]==0&&life==3) {
-          output[i][j]=1;
-        } else if (input[i][j]==1&&life<=1) {
-          output[i][j]=0;
-        } else if (life>=4) {
-          output[i][j]=0;
-        }
-      }
-    }
-    draw();
-    if (!game) {
-      clearInterval(timer);
     }
   }
 }
